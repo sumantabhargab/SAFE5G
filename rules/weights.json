@@ -1,0 +1,12 @@
+{
+    "following": 25,
+    "loitering": 20,
+    "running": 15,
+    "restricted_zone": 30,
+    "shake_sensor": 50,
+    "night_time": 10,
+    "crowd": 10,
+    "rapid_direction_change": 10,
+    "camera_tampering": 40,
+    "panic_button": 100
+}
