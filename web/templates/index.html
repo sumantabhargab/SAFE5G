@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Safe5G Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/8c0d0d5a5d.js" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <div class="background-glow glow1"></div>
+    <div class="background-glow glow2"></div>
+
+    <div class="dashboard">
+
+        <!-- ================= Sidebar ================= -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+
+                <div>
+
+                    <h2>Safe5G</h2>
+
+                    <span>AI SECURITY</span>
+
+                </div>
+
+            </div>
+
+            <nav>
+
+                <ul>
+
+                    <li class="active">
+                        <a href="#">
+                            <i class="fas fa-chart-line"></i>
+                            Dashboard
+                        </a>
+                    </li>
+
+                    <li>
+
+                        <a href="cameras.html">
+
+                            <i class="fas fa-video"></i>
+
+                            Cameras
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="alerts.html">
+
+                            <i class="fas fa-triangle-exclamation"></i>
+
+                            Alerts
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="history.html">
+
+                            <i class="fas fa-clock-rotate-left"></i>
+
+                            History
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="settings.html">
+
+                            <i class="fas fa-gear"></i>
+
+                            Settings
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <div class="system-card">
+
+                    <span class="dot"></span>
+
+                    <div>
+
+                        <h4>System Online</h4>
+
+                        <p>99.98% Uptime</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+        <!-- ================= Main ================= -->
+
+        <main class="content">
+
+            <!-- ================= Header ================= -->
+
+            <header>
+
+                <div>
+
+                    <h1>Dashboard</h1>
+
+                    <p>AI Powered Women Safety Surveillance Platform</p>
+
+                </div>
+
+                <div class="header-right">
+
+                    <div class="notification">
+
+                        <i class="fas fa-bell"></i>
+
+                        <span>5</span>
+
+                    </div>
+
+                    <div class="profile">
+
+                        <div class="avatar">
+
+                            AR
+
+                        </div>
+
+                        <div>
+
+                            <h4>Aarti R.</h4>
+
+                            <p>Administrator</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+            <!-- ================= Cards ================= -->
+
+            <section class="cards">
+
+                <div class="card">
+
+                    <div class="card-icon blue">
+
+                        <i class="fas fa-video"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="cameraCount">4</h2>
+
+                        <p>Cameras Online</p>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-icon red">
+
+                        <i class="fas fa-triangle-exclamation"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="alertsToday">02</h2>
+
+                        <p>Today's Alerts</p>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-icon green">
+
+                        <i class="fas fa-user-group"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="peopleDetected">11</h2>
+
+                        <p>People Detected</p>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-icon purple">
+
+                        <i class="fas fa-brain"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="aiAccuracy">96.3%</h2>
+
+                        <p>AI Confidence</p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ================= Main Grid ================= -->
+
+            <section class="main-grid">
+
+                <!-- LEFT -->
+
+                <div class="left-column">
+
+                    <div class="panel camera-panel">
+
+                        <div class="panel-header">
+
+                            <h2>
+
+                                Live Camera Feed
+
+                            </h2>
+
+                            <button>
+
+                                View All
+
+                            </button>
+
+                        </div>
+
+<div class="camera-feed">
+
+    <img
+        id="live-feed"
+        src="{{ url_for('video_feed') }}"
+        alt="Live Camera Feed"
+        style="
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:20px;
+        "
+    >
+
+    <div class="scan-line"></div>
+
+    <div class="camera-overlay">
+
+        <div>
+
+            CAM-01
+
+        </div>
+
+        <div style="color:#00ff88;font-weight:bold;">
+
+            ● LIVE
+
+        </div>
+
+    </div>
+
+    </div>
+
+                        <div class="camera-stats">
+
+                            <div>
+
+                                <span>Violence</span>
+
+                                <h3 id="violenceProb">
+
+                                    18%
+
+                                </h3>
+
+                            </div>
+
+                            <div>
+
+                                <span>Persons</span>
+
+                                <h3 id="personCount">
+
+                                    3
+
+                                </h3>
+
+                            </div>
+
+                            <div>
+
+                                <span>Gesture</span>
+
+                                <h3 id="gestureStatus">
+
+                                    None
+
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <h2>
+
+                                Recent Incidents
+
+                            </h2>
+
+                        </div>
+
+                        <div class="incident-list">
+
+                            <div class="incident danger">
+
+                                <div class="incident-dot"></div>
+
+                                <div>
+
+                                    <h4>Violence Detected</h4>
+
+                                    <p>Living Room</p>
+
+                                </div>
+
+                                <span>
+
+                                    21:04
+
+                                </span>
+
+                            </div>
+
+                            <div class="incident warning">
+
+                                <div class="incident-dot"></div>
+
+                                <div>
+
+                                    <h4>HELP Gesture</h4>
+
+                                    <p>Front Door</p>
+
+                                </div>
+
+                                <span>
+
+                                    18:14
+
+                                </span>
+
+                            </div>
+                                                        <div class="incident success">
+
+                                <div class="incident-dot"></div>
+
+                                <div>
+
+                                    <h4>System Check Complete</h4>
+
+                                    <p>All Cameras Healthy</p>
+
+                                </div>
+
+                                <span>
+
+                                    15:42
+
+                                </span>
+
+                            </div>
+
+                            <div class="incident info">
+
+                                <div class="incident-dot"></div>
+
+                                <div>
+
+                                    <h4>Camera Connected</h4>
+
+                                    <p>Parking Area</p>
+
+                                </div>
+
+                                <span>
+
+                                    14:08
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- RIGHT -->
+
+                <div class="right-column">
+
+                    <!-- Threat Meter -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <h2>Threat Level</h2>
+
+                        </div>
+
+                        <div class="threat-card">
+
+                            <div class="threat-circle">
+
+                                <div class="circle">
+
+                                    <h1 id="threatValue">
+
+                                        28%
+
+                                    </h1>
+
+                                    <span>LOW</span>
+
+                                </div>
+
+                            </div>
+
+                            <div class="threat-bars">
+
+                                <div class="bar active"></div>
+
+                                <div class="bar active"></div>
+
+                                <div class="bar"></div>
+
+                                <div class="bar"></div>
+
+                                <div class="bar"></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- AI Status -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <h2>AI Modules</h2>
+
+                        </div>
+
+                        <div class="status-list">
+
+                            <div class="status-item">
+
+                                <div>
+
+                                    <i class="fas fa-person"></i>
+
+                                    Person Detection
+
+                                </div>
+
+                                <span class="online">
+
+                                    Active
+
+                                </span>
+
+                            </div>
+
+                            <div class="status-item">
+
+                                <div>
+
+                                    <i class="fas fa-brain"></i>
+
+                                    Violence Detection
+
+                                </div>
+
+                                <span class="online">
+
+                                    Active
+
+                                </span>
+
+                            </div>
+
+                            <div class="status-item">
+
+                                <div>
+
+                                    <i class="fas fa-hand-paper"></i>
+
+                                    Gesture Detection
+
+                                </div>
+
+                                <span class="online">
+
+                                    Active
+
+                                </span>
+
+                            </div>
+
+                            <div class="status-item">
+
+                                <div>
+
+                                    <i class="fas fa-network-wired"></i>
+
+                                    Threat Engine
+
+                                </div>
+
+                                <span class="online">
+
+                                    Active
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Notification Card -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <h2>Latest Notification</h2>
+
+                        </div>
+
+                        <div class="latest-alert">
+
+                            <div class="alert-icon">
+
+                                <i class="fas fa-bell"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h3>
+
+                                    No Active Emergency
+
+                                </h3>
+
+                                <p>
+
+                                    AI Monitoring All Cameras
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Quick Actions -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <h2>
+
+                                Quick Actions
+
+                            </h2>
+
+                        </div>
+
+                        <div class="quick-actions">
+
+                            <button>
+
+                                <i class="fas fa-video"></i>
+
+                                Cameras
+
+                            </button>
+
+                            <button>
+
+                                <i class="fas fa-download"></i>
+
+                                Reports
+
+                            </button>
+
+                            <button>
+
+                                <i class="fas fa-volume-high"></i>
+
+                                Siren
+
+                            </button>
+
+                            <button>
+
+                                <i class="fas fa-phone"></i>
+
+                                SOS
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+
+</html>

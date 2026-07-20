@@ -1,221 +1,86 @@
 import cv2
-import config
+import threading
 
-from camera.webcam import Webcam
-from ai.tracker import Tracker
-from ai.violence_detector import ViolenceDetector
+from ai.pipeline import pipeline
+from camera.camera_manager import camera_manager
+from web.app import app
 
 
-def main():
+class Safe5G:
 
-    print("=" * 50)
-    print("Starting Safe5G...")
-    print("=" * 50)
+    def __init__(self):
 
-    # ----------------------------------------
-    # Initialize
-    # ----------------------------------------
+        self.running = True
 
-    camera = Webcam()
-    tracker = Tracker()
+    ############################################################
+    # DASHBOARD
+    ############################################################
 
-    violence_detector = ViolenceDetector(
-        config.VIOLENCE_MODEL
-    )
+    def start_dashboard(self):
 
-    camera.start()
+        app.run(
+            host="0.0.0.0",
+            port=5000,
+            debug=False,
+            use_reloader=False
+        )
 
-    frame_count = 0
+    ############################################################
+    # CAMERA LOOP
+    ############################################################
 
-    violence_probability = 0.0
-    violence_label = "Unknown"
+    def start_camera(self):
 
-    # ----------------------------------------
+        cap = camera_manager.get_camera(0)
 
-    while True:
+        while self.running:
 
-        frame = camera.read()
+            ret, frame = cap.read()
 
-        if frame is None:
-            break
+            if not ret:
+                break
 
-        # ------------------------------------
-        # Person Tracking
-        # ------------------------------------
-
-        tracked_people = tracker.update(frame)
-
-        annotated = frame.copy()
-
-        for person in tracked_people:
-
-            x1, y1, x2, y2 = person.bbox
-
-            cv2.rectangle(
-
-                annotated,
-
-                (x1, y1),
-
-                (x2, y2),
-
-                (0,255,0),
-
-                2
-
+            # Run AI Pipeline
+            result = pipeline.process(
+                frame,
+                camera="Camera 01",
+                location="Main Gate"
             )
 
-            cv2.putText(
+            # Send processed frame to website
+            camera_manager.update_frame(result["frame"])
 
-                annotated,
-
-                f"ID : {person.id}",
-
-                (x1,y1-10),
-
-                cv2.FONT_HERSHEY_SIMPLEX,
-
-                0.6,
-
-                (0,255,0),
-
-                2
-
+            # Optional OpenCV window
+            cv2.imshow(
+                "Safe5G",
+                result["frame"]
             )
 
-        # ------------------------------------
-        # Violence Detection
-        # ------------------------------------
+            key = cv2.waitKey(1)
 
-        if frame_count % config.FRAME_SKIP_FOR_VIOLENCE == 0:
+            if key == ord("q"):
+                self.running = False
+                break
 
-            result = violence_detector.predict(frame)
+        pipeline.stop()
+        camera_manager.release()
+        cv2.destroyAllWindows()
 
-            violence_probability = result["violence_probability"]
+    ############################################################
+    # START APPLICATION
+    ############################################################
 
-            violence_label = result["label"]
+    def run(self):
 
-        frame_count += 1
-
-        # ------------------------------------
-        # Decide Threat Level
-        # ------------------------------------
-
-        if violence_probability > 0.90:
-
-            threat = "CRITICAL"
-            color = (0,0,255)
-
-        elif violence_probability > 0.75:
-
-            threat = "HIGH"
-            color = (0,69,255)
-
-        elif violence_probability > 0.50:
-
-            threat = "MEDIUM"
-            color = (0,165,255)
-
-        else:
-
-            threat = "SAFE"
-            color = (0,255,0)
-
-        # ------------------------------------
-        # Draw Information
-        # ------------------------------------
-
-        cv2.putText(
-
-            annotated,
-
-            f"People : {len(tracked_people)}",
-
-            (20,40),
-
-            cv2.FONT_HERSHEY_SIMPLEX,
-
-            0.8,
-
-            (255,255,255),
-
-            2
-
+        dashboard = threading.Thread(
+            target=self.start_dashboard,
+            daemon=True
         )
 
-        cv2.putText(
+        dashboard.start()
 
-            annotated,
-
-            f"Violence : {violence_label}",
-
-            (20,80),
-
-            cv2.FONT_HERSHEY_SIMPLEX,
-
-            0.8,
-
-            color,
-
-            2
-
-        )
-
-        cv2.putText(
-
-            annotated,
-
-            f"Probability : {violence_probability:.2f}",
-
-            (20,120),
-
-            cv2.FONT_HERSHEY_SIMPLEX,
-
-            0.8,
-
-            color,
-
-            2
-
-        )
-
-        cv2.putText(
-
-            annotated,
-
-            f"Threat : {threat}",
-
-            (20,160),
-
-            cv2.FONT_HERSHEY_SIMPLEX,
-
-            0.9,
-
-            color,
-
-            3
-
-        )
-
-        cv2.imshow(
-
-            config.WINDOW_NAME,
-
-            annotated
-
-        )
-
-        key = cv2.waitKey(1)
-
-        if key == ord("q"):
-
-            break
-
-    camera.stop()
-
-    cv2.destroyAllWindows()
+        self.start_camera()
 
 
 if __name__ == "__main__":
-
-    main()
+    Safe5G().run()

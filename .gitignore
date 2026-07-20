@@ -1,0 +1,101 @@
+# Python
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+
+venv/
+env/
+.venv/
+
+# Environment Variables
+
+.env
+
+# VS Code
+
+.vscode/
+
+# PyCharm
+
+.idea/
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# Database
+
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+
+logs/
+*.log
+
+# Temporary
+
+temp/
+tmp/
+*.tmp
+
+# Build
+
+build/
+dist/
+*.egg-info/
+
+# Python Cache
+
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+# Media Output
+
+media/images/*
+media/videos/*
+media/reports/*
+
+!media/images/.gitkeep
+!media/videos/.gitkeep
+!media/reports/.gitkeep
+
+# AI Models
+
+models/*.pt
+models/*.onnx
+models/*.keras
+models/*.h5
+models/*.tflite
+models/*.engine
+models/*.weights
+
+# Operating System
+
+.DS_Store
+Thumbs.db
+
+# Flask
+
+instance/
+flask_session/
+
+# Coverage
+
+.coverage
+htmlcov/
+
+# TensorFlow
+
+events.out.tfevents*
+
+# Misc
+
+*.bak
+*.swp
+*.swo

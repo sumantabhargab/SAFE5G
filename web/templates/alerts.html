@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SAFE5G | Alerts</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="background-glow glow1"></div>
+
+<div class="background-glow glow2"></div>
+
+<div class="dashboard">
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<div class="logo-icon">
+
+<i class="fas fa-shield-halved"></i>
+
+</div>
+
+<div>
+
+<h2>SAFE5G</h2>
+
+<span>ALERT CENTER</span>
+
+</div>
+
+</div>
+
+<ul>
+
+<li>
+
+<a href="/">
+
+<i class="fas fa-chart-line"></i>
+
+Dashboard
+
+</a>
+
+</li>
+
+<li>
+
+<a href="/cameras">
+
+<i class="fas fa-video"></i>
+
+Cameras
+
+</a>
+
+</li>
+
+<li class="active">
+
+<a href="/alerts">
+
+<i class="fas fa-triangle-exclamation"></i>
+
+Alerts
+
+</a>
+
+</li>
+
+<li>
+
+<a href="#">
+
+<i class="fas fa-users"></i>
+
+People
+
+</a>
+
+</li>
+
+<li>
+
+<a href="#">
+
+<i class="fas fa-gear"></i>
+
+Settings
+
+</a>
+
+</li>
+
+</ul>
+
+</div>
+
+<div class="system-card">
+
+<div class="dot"></div>
+
+<div>
+
+<h4>AI Active</h4>
+
+<p>Real-time Monitoring</p>
+
+</div>
+
+</div>
+
+</aside>
+
+<main class="content">
+
+<header>
+
+<div>
+
+<h1>Alert Management</h1>
+
+<p>Live AI generated security events</p>
+
+</div>
+
+</header>
+
+<div class="cards">
+
+<div class="card">
+
+<div class="card-icon red">
+
+<i class="fas fa-triangle-exclamation"></i>
+
+</div>
+
+<div>
+
+<h2>31</h2>
+
+<p>Total Alerts</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-icon orange">
+
+<i class="fas fa-fire"></i>
+
+</div>
+
+<div>
+
+<h2>8</h2>
+
+<p>Critical</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-icon blue">
+
+<i class="fas fa-clock"></i>
+
+</div>
+
+<div>
+
+<h2>6</h2>
+
+<p>Pending</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-icon green">
+
+<i class="fas fa-check-circle"></i>
+
+</div>
+
+<div>
+
+<h2>17</h2>
+
+<p>Resolved</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Recent Alerts</h2>
+
+<button>
+
+<i class="fas fa-download"></i>
+
+Export
+
+</button>
+
+</div>
+
+<div class="incident-list">
+
+<div class="incident danger">
+
+<div class="incident-dot"></div>
+
+<div>
+
+<h4>Violence Detected</h4>
+
+<p>Camera 04 · Main Corridor</p>
+
+</div>
+
+<span>10:24 AM</span>
+
+</div>
+
+<div class="incident warning">
+
+<div class="incident-dot"></div>
+
+<div>
+
+<h4>HELP Hand Gesture</h4>
+
+<p>Camera 02 · Parking Area</p>
+
+</div>
+
+<span>10:20 AM</span>
+
+</div>
+
+<div class="incident info">
+
+<div class="incident-dot"></div>
+
+<div>
+
+<h4>Unknown Person</h4>
+
+<p>Camera 07 · Laboratory</p>
+
+</div>
+
+<span>10:16 AM</span>
+
+</div>
+
+<div class="incident success">
+
+<div class="incident-dot"></div>
+
+<div>
+
+<h4>Threat Cleared</h4>
+
+<p>Reception Camera</p>
+
+</div>
+
+<span>10:08 AM</span>
+
+</div>
+
+<div class="incident warning">
+
+<div class="incident-dot"></div>
+
+<div>
+
+<h4>Large Crowd Detected</h4>
+
+<p>Front Entrance</p>
+
+</div>
+
+<span>09:57 AM</span>
+
+</div>
+
+<div class="incident info">
+
+<div class="incident-dot"></div>
+
+<div>
+
+<h4>Restricted Area Entry</h4>
+
+<p>Server Room</p>
+
+</div>
+
+<span>09:51 AM</span>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="main-grid">
+
+<div class="left-column">
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Threat Timeline</h2>
+
+</div>
+
+<div class="camera-placeholder">
+
+<i class="fas fa-chart-line"></i>
+
+<p>Threat Graph Placeholder</p>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Detected Objects</h2>
+
+</div>
+
+<div class="status-list">
+
+<div class="status-item">
+
+<div>👤 Persons</div>
+
+<span>18</span>
+
+</div>
+
+<div class="status-item">
+
+<div>🚗 Vehicles</div>
+
+<span>9</span>
+
+</div>
+
+<div class="status-item">
+
+<div>👜 Bags</div>
+
+<span>5</span>
+
+</div>
+
+<div class="status-item">
+
+<div>✋ HELP Gestures</div>
+
+<span>2</span>
+
+</div>
+
+<div class="status-item">
+
+<div>⚠ Violence Events</div>
+
+<span>1</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="right-column">
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Alert Statistics</h2>
+
+</div>
+
+<div class="camera-stats">
+
+<div>
+
+<span>Today</span>
+
+<h3>31</h3>
+
+</div>
+
+<div>
+
+<span>Critical</span>
+
+<h3>8</h3>
+
+</div>
+
+<div>
+
+<span>Resolved</span>
+
+<h3>17</h3>
+
+</div>
+
+</div>
+
+</div>
+
+
+===================
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Response Actions</h2>
+
+</div>
+
+<div class="quick-actions">
+
+<button>
+
+<i class="fas fa-bell"></i>
+
+Notify Police
+
+</button>
+
+<button>
+
+<i class="fas fa-phone"></i>
+
+Call Security
+
+</button>
+
+<button>
+
+<i class="fas fa-video"></i>
+
+Open Camera
+
+</button>
+
+<button>
+
+<i class="fas fa-file-export"></i>
+
+Generate Report
+
+</button>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>AI Modules</h2>
+
+</div>
+
+<div class="status-list">
+
+<div class="status-item">
+
+<div>YOLO Detection</div>
+
+<span class="online">Running</span>
+
+</div>
+
+<div class="status-item">
+
+<div>Gesture Recognition</div>
+
+<span class="online">Running</span>
+
+</div>
+
+<div class="status-item">
+
+<div>Violence Detection</div>
+
+<span class="online">Running</span>
+
+</div>
+
+<div class="status-item">
+
+<div>Tracking Engine</div>
+
+<span class="online">Running</span>
+
+</div>
+
+<div class="status-item">
+
+<div>Database Logger</div>
+
+<span class="online">Connected</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+
+</html>

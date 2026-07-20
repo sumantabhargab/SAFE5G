@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SAFE5G | Cameras</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="background-glow glow1"></div>
+
+<div class="background-glow glow2"></div>
+
+<div class="dashboard">
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+
+<div class="logo-icon">
+
+<i class="fa-solid fa-shield-halved"></i>
+
+</div>
+
+<div>
+
+<h2>SAFE5G</h2>
+
+<span>CAMERAS</span>
+
+</div>
+
+</div>
+
+<ul>
+
+<li>
+
+<a href="/">
+
+<i class="fas fa-chart-line"></i>
+
+Dashboard
+
+</a>
+
+</li>
+
+<li class="active">
+
+<a href="/cameras">
+
+<i class="fas fa-video"></i>
+
+Cameras
+
+</a>
+
+</li>
+
+<li>
+
+<a href="/alerts">
+
+<i class="fas fa-triangle-exclamation"></i>
+
+Alerts
+
+</a>
+
+</li>
+
+<li>
+
+<a href="#">
+
+<i class="fas fa-users"></i>
+
+People
+
+</a>
+
+</li>
+
+<li>
+
+<a href="#">
+
+<i class="fas fa-gear"></i>
+
+Settings
+
+</a>
+
+</li>
+
+</ul>
+
+</div>
+
+<div class="system-card">
+
+<div class="dot"></div>
+
+<div>
+
+<h4>Connected</h4>
+
+<p>8 Cameras Online</p>
+
+</div>
+
+</div>
+
+</aside>
+
+<main class="content">
+
+<header>
+
+<div>
+
+<h1>Camera Management</h1>
+
+<p>Monitor every connected surveillance stream</p>
+
+</div>
+
+</header>
+
+<div class="cards">
+
+<div class="card">
+
+<div class="card-icon blue">
+
+<i class="fas fa-video"></i>
+
+</div>
+
+<div>
+
+<h2>8</h2>
+
+<p>Total Cameras</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-icon green">
+
+<i class="fas fa-circle-check"></i>
+
+</div>
+
+<div>
+
+<h2>8</h2>
+
+<p>Online</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-icon red">
+
+<i class="fas fa-circle-xmark"></i>
+
+</div>
+
+<div>
+
+<h2>0</h2>
+
+<p>Offline</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-icon purple">
+
+<i class="fas fa-hard-drive"></i>
+
+</div>
+
+<div>
+
+<h2>2.8TB</h2>
+
+<p>Storage Left</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="main-grid">
+
+<div class="left-column">
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Live Camera Grid</h2>
+
+<button>
+
+<i class="fas fa-plus"></i>
+
+Add Camera
+
+</button>
+
+</div>
+
+<div class="camera-grid">
+
+<div class="camera-card">
+
+    <div class="camera-feed">
+
+        <div class="camera-overlay">
+
+            <span>Front Gate</span>
+
+            <span class="online">LIVE</span>
+
+        </div>
+
+        <div class="camera-placeholder">
+
+            <i class="fas fa-video"></i>
+
+            <p>Camera Stream</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="camera-card">
+
+    <div class="camera-feed">
+
+        <div class="camera-overlay">
+
+            <span>Reception</span>
+
+            <span class="online">LIVE</span>
+
+        </div>
+
+        <div class="camera-placeholder">
+
+            <i class="fas fa-video"></i>
+
+            <p>Camera Stream</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="camera-card">
+
+    <div class="camera-feed">
+
+        <div class="camera-overlay">
+
+            <span>Parking Area</span>
+
+            <span class="online">LIVE</span>
+
+        </div>
+
+        <div class="camera-placeholder">
+
+            <i class="fas fa-video"></i>
+
+            <p>Camera Stream</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="camera-card">
+
+    <div class="camera-feed">
+
+        <div class="camera-overlay">
+
+            <span>Corridor</span>
+
+            <span class="online">LIVE</span>
+
+        </div>
+
+        <div class="camera-placeholder">
+
+            <i class="fas fa-video"></i>
+
+            <p>Camera Stream</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="camera-card">
+
+    <div class="camera-feed">
+
+        <div class="camera-overlay">
+
+            <span>Laboratory</span>
+
+            <span class="online">LIVE</span>
+
+        </div>
+
+        <div class="camera-placeholder">
+
+            <i class="fas fa-video"></i>
+
+            <p>Camera Stream</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="camera-card">
+
+    <div class="camera-feed">
+
+        <div class="camera-overlay">
+
+            <span>Back Entrance</span>
+
+            <span class="online">LIVE</span>
+
+        </div>
+
+        <div class="camera-placeholder">
+
+            <i class="fas fa-video"></i>
+
+            <p>Camera Stream</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="right-column">
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Camera Health</h2>
+
+</div>
+
+<div class="status-list">
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Front Gate
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Reception
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Parking
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Corridor
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Laboratory
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Back Entrance
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Server Room
+
+</div>
+
+<span class="online">
+
+Maintenance
+
+</span>
+
+</div>
+
+<div class="status-item">
+
+<div>
+
+<i class="fas fa-camera"></i>
+
+Emergency Exit
+
+</div>
+
+<span class="online">
+
+Healthy
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Recording Status</h2>
+
+</div>
+
+<div class="camera-stats">
+
+<div>
+
+<span>Recording</span>
+
+<h3>8</h3>
+
+</div>
+
+<div>
+
+<span>FPS</span>
+
+<h3>30</h3>
+
+</div>
+
+<div>
+
+<span>Latency</span>
+
+<h3>21ms</h3>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-header">
+
+<h2>Quick Actions</h2>
+
+</div>
+
+<div class="quick-actions">
+
+<button>
+
+<i class="fas fa-play"></i>
+
+Start
+
+</button>
+
+<button>
+
+<i class="fas fa-stop"></i>
+
+Stop
+
+</button>
+
+<button>
+
+<i class="fas fa-download"></i>
+
+Download
+
+</button>
+
+<button>
+
+<i class="fas fa-rotate"></i>
+
+Refresh
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+
+</html>

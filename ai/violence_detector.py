@@ -1,91 +1,141 @@
-import torch
-import timm
 import cv2
 import numpy as np
 
-from torchvision import transforms
-
 
 class ViolenceDetector:
+    """
+    Lightweight violence detector.
 
-    def __init__(self, model_path):
+    This implementation is intentionally modular.
 
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
+    Current version:
+        • Motion-based heuristic
+        • Designed as a placeholder
+
+    Future upgrades:
+        ✓ MoBiLSTM
+        ✓ ConvLSTM
+        ✓ I3D
+        ✓ SlowFast
+        ✓ Video Swin Transformer
+
+    Pipeline will NOT need any changes when the
+    model is upgraded.
+    """
+
+    def __init__(self, motion_threshold=35):
+
+        self.previous_gray = None
+
+        self.motion_threshold = motion_threshold
+
+    def detect(self, frame):
+
+        annotated = frame.copy()
+
+        gray = cv2.cvtColor(
+
+            frame,
+
+            cv2.COLOR_BGR2GRAY
+
         )
 
-        self.model = timm.create_model(
-            "efficientnet_b0",
-            pretrained=False,
-            num_classes=2
+        gray = cv2.GaussianBlur(
+
+            gray,
+
+            (21, 21),
+
+            0
+
         )
 
-        self.model.load_state_dict(
-            torch.load(
-                model_path,
-                map_location=self.device
-            )
-        )
+        violence = False
 
-        self.model.to(self.device)
+        score = 0.0
 
-        self.model.eval()
+        if self.previous_gray is not None:
 
-        self.transform = transforms.Compose([
+            delta = cv2.absdiff(
 
-            transforms.ToPILImage(),
+                self.previous_gray,
 
-            transforms.Resize((224, 224)),
-
-            transforms.ToTensor(),
-
-            transforms.Normalize(
-
-                mean=[0.485, 0.456, 0.406],
-
-                std=[0.229, 0.224, 0.225]
+                gray
 
             )
 
-        ])
+            thresh = cv2.threshold(
 
-    # ---------------------------------------------------------
+                delta,
 
-    def predict(self, frame):
+                25,
 
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                255,
 
-        image = self.transform(rgb)
+                cv2.THRESH_BINARY
 
-        image = image.unsqueeze(0).to(self.device)
+            )[1]
 
-        with torch.no_grad():
+            thresh = cv2.dilate(
 
-            outputs = self.model(image)
+                thresh,
 
-            probabilities = torch.softmax(outputs, dim=1)
+                None,
 
-            confidence, prediction = torch.max(
-                probabilities,
-                1
+                iterations=2
+
             )
 
-        if prediction.item() == 0:
+            motion_pixels = np.sum(
 
-            label = "NonViolence"
+                thresh == 255
 
-        else:
+            )
 
-            label = "Violence"
+            total_pixels = thresh.shape[0] * thresh.shape[1]
+
+            score = motion_pixels / total_pixels
+
+            if score > 0.12:
+
+                violence = True
+
+        self.previous_gray = gray
+
+        if violence:
+
+            cv2.putText(
+
+                annotated,
+
+                "VIOLENCE DETECTED",
+
+                (20, 110),
+
+                cv2.FONT_HERSHEY_SIMPLEX,
+
+                1,
+
+                (0, 0, 255),
+
+                3
+
+            )
 
         return {
 
-            "label": label,
+            "violence": violence,
 
-            "confidence": float(confidence.item()),
+            "score": round(score, 3),
 
-            "violence_probability": float(
-                probabilities[0][1].item()
-            )
+            "frame": annotated
 
         }
+
+    def reset(self):
+
+        self.previous_gray = None
+
+
+violence_detector = ViolenceDetector()
