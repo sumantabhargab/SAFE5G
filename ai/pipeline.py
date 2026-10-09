@@ -107,6 +107,8 @@ class AIPipeline:
 
         self.last_person_count = person_count
 
+        self.last_fps = yolo["fps"]
+
         #############################################
         # Alert Dispatch (cooldown-gated by rule engine + alert manager)
         #############################################

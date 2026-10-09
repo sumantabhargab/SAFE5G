@@ -160,7 +160,7 @@ Settings
 
 <div>
 
-<h2>8</h2>
+<h2>{{ status.cameras }}</h2>
 
 <p>Total Cameras</p>
 
@@ -178,7 +178,7 @@ Settings
 
 <div>
 
-<h2>8</h2>
+<h2>{{ status.online }}</h2>
 
 <p>Online</p>
 
@@ -196,7 +196,7 @@ Settings
 
 <div>
 
-<h2>0</h2>
+<h2>{{ status.offline }}</h2>
 
 <p>Offline</p>
 
@@ -214,7 +214,7 @@ Settings
 
 <div>
 
-<h2>2.8TB</h2>
+<h2>{{ status.storage }}</h2>
 
 <p>Storage Left</p>
 
@@ -246,15 +246,17 @@ Add Camera
 
 <div class="camera-grid">
 
+{% for cam in cameras %}
+
 <div class="camera-card">
 
     <div class="camera-feed">
 
         <div class="camera-overlay">
 
-            <span>Front Gate</span>
+            <span>{{ cam.name }}</span>
 
-            <span class="online">LIVE</span>
+            <span class="{{ 'online' if cam.online else 'offline' }}">{{ 'LIVE' if cam.online else 'OFFLINE' }}</span>
 
         </div>
 
@@ -262,7 +264,7 @@ Add Camera
 
             <i class="fas fa-video"></i>
 
-            <p>Camera Stream</p>
+            <p>{{ 'AI Processed Stream' if cam.online else 'Waiting for stream' }}</p>
 
         </div>
 
@@ -270,123 +272,7 @@ Add Camera
 
 </div>
 
-<div class="camera-card">
-
-    <div class="camera-feed">
-
-        <div class="camera-overlay">
-
-            <span>Reception</span>
-
-            <span class="online">LIVE</span>
-
-        </div>
-
-        <div class="camera-placeholder">
-
-            <i class="fas fa-video"></i>
-
-            <p>Camera Stream</p>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div class="camera-card">
-
-    <div class="camera-feed">
-
-        <div class="camera-overlay">
-
-            <span>Parking Area</span>
-
-            <span class="online">LIVE</span>
-
-        </div>
-
-        <div class="camera-placeholder">
-
-            <i class="fas fa-video"></i>
-
-            <p>Camera Stream</p>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div class="camera-card">
-
-    <div class="camera-feed">
-
-        <div class="camera-overlay">
-
-            <span>Corridor</span>
-
-            <span class="online">LIVE</span>
-
-        </div>
-
-        <div class="camera-placeholder">
-
-            <i class="fas fa-video"></i>
-
-            <p>Camera Stream</p>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div class="camera-card">
-
-    <div class="camera-feed">
-
-        <div class="camera-overlay">
-
-            <span>Laboratory</span>
-
-            <span class="online">LIVE</span>
-
-        </div>
-
-        <div class="camera-placeholder">
-
-            <i class="fas fa-video"></i>
-
-            <p>Camera Stream</p>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div class="camera-card">
-
-    <div class="camera-feed">
-
-        <div class="camera-overlay">
-
-            <span>Back Entrance</span>
-
-            <span class="online">LIVE</span>
-
-        </div>
-
-        <div class="camera-placeholder">
-
-            <i class="fas fa-video"></i>
-
-            <p>Camera Stream</p>
-
-        </div>
-
-    </div>
+{% endfor %}
 
 </div>
 
@@ -408,139 +294,27 @@ Add Camera
 
 <div class="status-list">
 
+{% for cam in cameras %}
+
 <div class="status-item">
 
 <div>
 
 <i class="fas fa-camera"></i>
 
-Front Gate
+{{ cam.name }}
 
 </div>
 
-<span class="online">
+<span class="{{ 'online' if cam.online else 'offline' }}">
 
-Healthy
+{{ 'Healthy' if cam.online else 'Offline' }}
 
 </span>
 
 </div>
 
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Reception
-
-</div>
-
-<span class="online">
-
-Healthy
-
-</span>
-
-</div>
-
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Parking
-
-</div>
-
-<span class="online">
-
-Healthy
-
-</span>
-
-</div>
-
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Corridor
-
-</div>
-
-<span class="online">
-
-Healthy
-
-</span>
-
-</div>
-
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Laboratory
-
-</div>
-
-<span class="online">
-
-Healthy
-
-</span>
-
-</div>
-
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Back Entrance
-
-</div>
-
-<span class="online">
-
-Healthy
-
-</span>
-
-</div>
-
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Server Room
-
-</div>
-
-<span class="online">
-
-Maintenance
-
-</span>
-
-</div>
-
-<div class="status-item">
-
-<div>
-
-<i class="fas fa-camera"></i>
-
-Emergency Exit
+{% endfor %}
 
 </div>
 
@@ -570,7 +344,7 @@ Healthy
 
 <span>Recording</span>
 
-<h3>8</h3>
+<h3>{{ status.recording }}</h3>
 
 </div>
 
@@ -578,15 +352,15 @@ Healthy
 
 <span>FPS</span>
 
-<h3>30</h3>
+<h3>{{ status.fps }}</h3>
 
 </div>
 
 <div>
 
-<span>Latency</span>
+<span>Resolution</span>
 
-<h3>21ms</h3>
+<h3>{{ status.resolution }}</h3>
 
 </div>
 

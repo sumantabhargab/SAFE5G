@@ -1,4 +1,6 @@
+import shutil
 import time
+from pathlib import Path
 
 from flask import Flask, render_template, Response, jsonify, request
 
@@ -6,6 +8,9 @@ from camera.camera_manager import camera_manager
 from database.database import db
 from sensors.alert_manager import alert_manager
 from ai.pipeline import pipeline
+from utils.config import CAMERAS, FRAME_WIDTH, FRAME_HEIGHT
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 app = Flask(__name__)
 
@@ -69,7 +74,31 @@ def dashboard():
 
 @app.route("/cameras")
 def cameras():
-    return render_template("cameras.html")
+    online = 1 if camera_manager.get_jpeg() is not None else 0
+
+    configured = len(CAMERAS)
+
+    threat = pipeline.last_threat
+
+    return render_template(
+        "cameras.html",
+        cameras=[
+            {
+                "name": cam["name"],
+                "online": online,  # same physical source for all configured entries
+            }
+            for cam in CAMERAS.values()
+        ],
+        status={
+            "cameras": configured,
+            "online": online,
+            "offline": configured - online,
+            "storage": f"{shutil.disk_usage(BASE_DIR).free / (1024 ** 3):.0f}GB",
+            "recording": 1 if pipeline.recording else 0,
+            "fps": int(getattr(pipeline, "last_fps", 0) or 0),
+            "resolution": f"{FRAME_WIDTH}x{FRAME_HEIGHT}",
+        },
+    )
 
 
 @app.route("/alerts")

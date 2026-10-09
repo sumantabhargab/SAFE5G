@@ -119,7 +119,11 @@ class MediaManager:
 
         self.recording = False
 
-        return str(self.video_file)
+        path = self.video_file
+
+        self.video_file = None
+
+        return str(path) if path else None
 
     def snapshot(
 
