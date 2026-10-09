@@ -6,7 +6,8 @@ Responsible for drawing everything on the frame.
 """
 
 import cv2
-import config
+
+from utils import config
 
 
 class Drawer:

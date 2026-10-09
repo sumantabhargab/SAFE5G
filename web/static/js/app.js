@@ -1,83 +1,220 @@
 /* =====================================
-        SAFE5G DASHBOARD
+        SAFE5G DASHBOARD (live data)
+=====================================
+   All displayed values come from the backend APIs (/api/status,
+   /api/threat, /api/alerts) which read real system state and the
+   SQLite database. No simulated data.
 ===================================== */
 
 const threatValue = document.getElementById("threatValue");
 
-let threat = 28;
+const alertsToday = document.getElementById("alertsToday");
+
+const peopleDetected = document.getElementById("peopleDetected");
+
+const incidentList = document.querySelector(".incident-list");
+
+const latestAlertBox = document.querySelector(".latest-alert");
 
 /* =====================================
-        THREAT LEVEL ANIMATION
+        LIVE DATA POLLING
 ===================================== */
 
-function updateThreat(){
+function applyThreat(data){
 
-    threat += Math.floor(Math.random()*7)-3;
+    const value = data.value ?? 0;
 
-    if(threat<8){
+    const level = data.level || "SAFE";
 
-        threat=8;
+    if(threatValue){
 
-    }
-
-    if(threat>95){
-
-        threat=95;
+        threatValue.innerText = value + "%";
 
     }
 
-    threatValue.innerText=threat+"%";
+    const circle = document.querySelector(".circle");
 
-    const circle=document.querySelector(".circle");
+    if(!circle) return;
 
-    let color="#22c55e";
+    let color = "#22c55e";
 
-    if(threat>35){
+    let label = "SAFE";
 
-        color="#f59e0b";
+    if(level === "LOW"){ color = "#eab308"; label = "LOW"; }
 
-    }
+    else if(level === "MEDIUM"){ color = "#f59e0b"; label = "MEDIUM"; }
 
-    if(threat>70){
+    else if(level === "HIGH"){ color = "#f97316"; label = "HIGH"; }
 
-        color="#ef4444";
+    else if(level === "CRITICAL"){ color = "#ef4444"; label = "CRITICAL"; }
 
-    }
-
-    circle.style.background=
+    circle.style.background =
     `conic-gradient(
         ${color} 0deg,
-        ${color} ${threat*3.6}deg,
-        #1d2d4f ${threat*3.6}deg,
+        ${color} ${value * 3.6}deg,
+        #1d2d4f ${value * 3.6}deg,
         #1d2d4f 360deg
     )`;
 
-    const text=circle.querySelector("span");
+    const text = circle.querySelector("span");
 
-    if(threat<35){
+    if(text){
 
-        text.innerText="LOW";
-        text.style.color="#22c55e";
+        text.innerText = label;
 
-    }
-
-    else if(threat<70){
-
-        text.innerText="MEDIUM";
-        text.style.color="#f59e0b";
+        text.style.color = color;
 
     }
 
-    else{
+    // Threat bars: 5 segments, active according to level
+    const bars = document.querySelectorAll(".threat-bars .bar");
 
-        text.innerText="HIGH";
-        text.style.color="#ef4444";
+    const activeCount = {"SAFE":1,"LOW":2,"MEDIUM":3,"HIGH":4,"CRITICAL":5}[level] || 1;
+
+    bars.forEach((bar, i) => {
+
+        bar.classList.toggle("active", i < activeCount);
+
+    });
+
+}
+
+function applyIncidents(alerts){
+
+    if(!incidentList || !Array.isArray(alerts)) return;
+
+    incidentList.innerHTML = "";
+
+    if(alerts.length === 0){
+
+        incidentList.innerHTML = `
+            <div class="incident info">
+                <div class="incident-dot"></div>
+                <div>
+                    <h4>No incidents yet</h4>
+                    <p>Live monitoring active</p>
+                </div>
+                <span>--</span>
+            </div>`;
+
+        return;
+
+    }
+
+    alerts.slice(0, 6).forEach(a => {
+
+        const type = a.alert_type === "Violence" ? "danger"
+                   : a.alert_type === "HELP Gesture" ? "warning"
+                   : "info";
+
+        const card = document.createElement("div");
+
+        card.className = `incident ${type}`;
+
+        const time = (a.created_at || "").split(" ").pop() || "--";
+
+        card.innerHTML = `
+            <div class="incident-dot"></div>
+            <div>
+                <h4>${escapeHtml(a.alert_type || "Event")}</h4>
+                <p>${escapeHtml(a.camera || "")} &middot; ${escapeHtml(a.location || "")}</p>
+            </div>
+            <span>${escapeHtml(time)}</span>
+        `;
+
+        incidentList.appendChild(card);
+
+    });
+
+}
+
+function applyStatus(data){
+
+    if(alertsToday && typeof data.alerts === "number"){
+
+        alertsToday.innerText = data.alerts;
+
+    }
+
+    if(peopleDetected && typeof data.persons === "number"){
+
+        peopleDetected.innerText = data.persons;
+
+    }
+
+    const badge = document.querySelector(".notification span");
+
+    if(badge && typeof data.pending === "number"){
+
+        badge.innerText = data.pending;
 
     }
 
 }
 
-setInterval(updateThreat,4000);
+function applyLatestAlert(alerts){
+
+    if(!latestAlertBox || !Array.isArray(alerts)) return;
+
+    const latest = alerts[0];
+
+    if(!latest) return;
+
+    const h3 = latestAlertBox.querySelector("h3");
+
+    const p = latestAlertBox.querySelector("p");
+
+    if(h3) h3.innerText = latest.alert_type + " - " + (latest.location || "");
+
+    if(p) p.innerText = (latest.created_at || "") + " (Pending review)";
+
+}
+
+function escapeHtml(text){
+
+    const div = document.createElement("div");
+
+    div.innerText = String(text);
+
+    return div.innerHTML;
+
+}
+
+async function refresh(){
+
+    try{
+
+        const [status, threat, alerts] = await Promise.all([
+
+            fetch("/api/status").then(r => r.json()),
+
+            fetch("/api/threat").then(r => r.json()),
+
+            fetch("/api/alerts?limit=10").then(r => r.json()),
+
+        ]);
+
+        applyStatus(status);
+
+        applyThreat(threat);
+
+        applyIncidents(alerts);
+
+        applyLatestAlert(alerts);
+
+    }catch(e){
+
+        // Backend unreachable: leave last known values on screen
+
+        console.warn("[SAFE5G] status refresh failed", e);
+
+    }
+
+}
+
+refresh();
+
+setInterval(refresh, 3000);
 
 /* =====================================
         LIVE CLOCK
@@ -85,506 +222,66 @@ setInterval(updateThreat,4000);
 
 function updateClock(){
 
-    const now=new Date();
+    const now = new Date();
 
-    const time=now.toLocaleTimeString();
+    const time = now.toLocaleTimeString();
 
-    const label=document.querySelector(".camera-overlay span");
+    const label = document.querySelector(".camera-overlay span");
 
     if(label){
 
-        label.innerHTML=
+        label.innerHTML =
         `<i class="fa-solid fa-clock"></i> ${time}`;
 
     }
 
 }
 
-setInterval(updateClock,1000);
+setInterval(updateClock, 1000);
 
 updateClock();
 
 /* =====================================
-        CARD COUNTER ANIMATION
+        CONNECTION STATUS (real camera state)
 ===================================== */
 
-function animateValue(element,start,end,duration){
+function checkCamera(){
 
-    let startTime=null;
+    const dot = document.querySelector(".dot");
 
-    function animation(currentTime){
+    fetch("/api/modules")
 
-        if(!startTime){
+        .then(r => r.json())
 
-            startTime=currentTime;
+        .then(data => {
 
-        }
+            if(dot) dot.style.opacity = data.camera === "Running" ? "1" : ".4";
 
-        const progress=Math.min((currentTime-startTime)/duration,1);
+        })
 
-        element.innerHTML=Math.floor(progress*(end-start)+start);
-
-        if(progress<1){
-
-            requestAnimationFrame(animation);
-
-        }
-
-    }
-
-    requestAnimationFrame(animation);
+        .catch(() => { if(dot) dot.style.opacity = ".4"; });
 
 }
 
-window.addEventListener("load",()=>{
+setInterval(checkCamera, 5000);
 
-    const cards=document.querySelectorAll(".card h2");
-
-    animateValue(cards[0],0,8,1000);
-
-    animateValue(cards[1],0,2,1200);
-
-    animateValue(cards[2],0,31,1400);
-
-    animateValue(cards[3],0,98,1600);
-
-});
+checkCamera();
 
 /* =====================================
-        INCIDENT GENERATOR
-===================================== */
-
-const incidentList=document.querySelector(".incident-list");
-
-const incidents=[
-
-    {
-
-        title:"Person Detected",
-
-        place:"Main Entrance",
-
-        type:"info"
-
-    },
-
-    {
-
-        title:"Violence Detected",
-
-        place:"Corridor Camera",
-
-        type:"danger"
-
-    },
-
-    {
-
-        title:"HELP Gesture",
-
-        place:"Parking Area",
-
-        type:"warning"
-
-    },
-
-    {
-
-        title:"Crowd Detected",
-
-        place:"Lobby",
-
-        type:"warning"
-
-    },
-
-    {
-
-        title:"Unknown Person",
-
-        place:"Restricted Zone",
-
-        type:"danger"
-
-    },
-
-    {
-
-        title:"Normal Activity",
-
-        place:"Reception",
-
-        type:"success"
-
-    }
-
-];
-
-function addIncident(){
-
-    if(!incidentList) return;
-
-    const data=incidents[Math.floor(Math.random()*incidents.length)];
-
-    const card=document.createElement("div");
-
-    card.className=`incident ${data.type}`;
-
-    const time=new Date().toLocaleTimeString([],{
-
-        hour:"2-digit",
-
-        minute:"2-digit"
-
-    });
-
-    card.innerHTML=`
-
-        <div class="incident-dot"></div>
-
-        <div>
-
-            <h4>${data.title}</h4>
-
-            <p>${data.place}</p>
-
-        </div>
-
-        <span>${time}</span>
-
-    `;
-
-    incidentList.prepend(card);
-
-    if(incidentList.children.length>6){
-
-        incidentList.removeChild(incidentList.lastElementChild);
-
-    }
-
-}
-
-setInterval(addIncident,10000);
-
-/* =====================================
-        BUTTON RIPPLE EFFECT
-===================================== */
-
-document.querySelectorAll("button").forEach(button=>{
-
-    button.addEventListener("click",function(e){
-
-        const ripple=document.createElement("span");
-
-        const rect=this.getBoundingClientRect();
-
-        const size=Math.max(rect.width,rect.height);
-
-        ripple.style.width=size+"px";
-
-        ripple.style.height=size+"px";
-
-        ripple.style.left=e.clientX-rect.left-size/2+"px";
-
-        ripple.style.top=e.clientY-rect.top-size/2+"px";
-
-        ripple.style.position="absolute";
-
-        ripple.style.borderRadius="50%";
-
-        ripple.style.background="rgba(255,255,255,.35)";
-
-        ripple.style.transform="scale(0)";
-
-        ripple.style.animation="ripple .6s linear";
-
-        ripple.style.pointerEvents="none";
-
-        this.style.position="relative";
-
-        this.style.overflow="hidden";
-
-        this.appendChild(ripple);
-
-        setTimeout(()=>{
-
-            ripple.remove();
-
-        },600);
-
-    });
-
-});
-
-/* =====================================
-        RIPPLE STYLE
-===================================== */
-
-const style=document.createElement("style");
-
-style.innerHTML=`
-
-@keyframes ripple{
-
-from{
-
-transform:scale(0);
-
-opacity:1;
-
-}
-
-to{
-
-transform:scale(4);
-
-opacity:0;
-
-}
-
-}
-
-`;
-
-document.head.appendChild(style);
-
-/* =====================================
-        STATUS SIMULATION
-===================================== */
-
-const statuses=[
-
-    "Monitoring",
-
-    "Analyzing",
-
-    "Scanning",
-
-    "Detecting",
-
-    "Tracking",
-
-    "Processing"
-
-];
-
-const subtitle=document.querySelector("header p");
-
-if(subtitle){
-
-    let index=0;
-
-    setInterval(()=>{
-
-        subtitle.innerHTML=`AI ${statuses[index]} All Connected Cameras`;
-
-        index=(index+1)%statuses.length;
-
-    },3000);
-
-}
-
-/* =====================================
-        CAMERA STATS SIMULATION
-===================================== */
-
-const statNumbers=document.querySelectorAll(".camera-stats h3");
-
-function random(min,max){
-
-    return Math.floor(Math.random()*(max-min+1))+min;
-
-}
-
-setInterval(()=>{
-
-    if(statNumbers.length>=3){
-
-        statNumbers[0].innerText=random(20,45);
-
-        statNumbers[1].innerText=random(90,100)+"%";
-
-        statNumbers[2].innerText=random(10,35)+"ms";
-
-    }
-
-},5000);
-
-/* =====================================
-        PANEL HOVER EFFECT
-===================================== */
-
-document.querySelectorAll(".panel").forEach(panel=>{
-
-    panel.addEventListener("mousemove",(e)=>{
-
-        const rect=panel.getBoundingClientRect();
-
-        const x=e.clientX-rect.left;
-
-        const y=e.clientY-rect.top;
-
-        panel.style.background=`
-
-        radial-gradient(
-
-        circle at ${x}px ${y}px,
-
-        rgba(59,130,246,.18),
-
-        rgba(18,30,55,.92) 55%
-
-        )`;
-
-    });
-
-    panel.addEventListener("mouseleave",()=>{
-
-        panel.style.background="rgba(18,30,55,.88)";
-
-    });
-
-});
-
-/* =====================================
-        SIDEBAR ACTIVE ITEM
-===================================== */
-
-document.querySelectorAll(".sidebar li").forEach(item=>{
-
-    item.addEventListener("click",()=>{
-
-        document.querySelectorAll(".sidebar li").forEach(i=>{
-
-            i.classList.remove("active");
-
-        });
-
-        item.classList.add("active");
-
-    });
-
-});
-
-/* =====================================
-        NOTIFICATION BADGE
-===================================== */
-
-const badge=document.querySelector(".notification span");
-
-let notificationCount=2;
-
-setInterval(()=>{
-
-    notificationCount++;
-
-    if(notificationCount>9){
-
-        notificationCount=1;
-
-    }
-
-    if(badge){
-
-        badge.innerText=notificationCount;
-
-    }
-
-},15000);
-
-/* =====================================
-        AI CONFIDENCE SIMULATION
-===================================== */
-
-const confidenceCard=document.querySelectorAll(".card h2")[3];
-
-setInterval(()=>{
-
-    if(!confidenceCard) return;
-
-    const confidence=Math.floor(Math.random()*5)+96;
-
-    confidenceCard.innerHTML=confidence+"%";
-
-},6000);
-
-/* =====================================
-        CONNECTION STATUS
-===================================== */
-
-const systemDot=document.querySelector(".dot");
-
-setInterval(()=>{
-
-    if(!systemDot) return;
-
-    systemDot.style.opacity=".4";
-
-    setTimeout(()=>{
-
-        systemDot.style.opacity="1";
-
-    },300);
-
-},1200);
-
-/* =====================================
-        CAMERA PLACEHOLDER MESSAGE
-===================================== */
-
-const placeholder=document.querySelector(".camera-placeholder p");
-
-const messages=[
-
-    "Waiting for Camera Feed...",
-
-    "Receiving Frames...",
-
-    "Running YOLO Detection...",
-
-    "Tracking Objects...",
-
-    "Monitoring Environment...",
-
-    "Detecting Gestures...",
-
-    "Analyzing Scene..."
-
-];
-
-let messageIndex=0;
-
-setInterval(()=>{
-
-    if(placeholder){
-
-        placeholder.innerText=messages[messageIndex];
-
-        messageIndex++;
-
-        if(messageIndex>=messages.length){
-
-            messageIndex=0;
-
-        }
-
-    }
-
-},3500);
-
-/* =====================================
-        KEYBOARD SHORTCUTS
+        KEYBOARD SHORTCUTS (input-safe)
 ===================================== */
 
 document.addEventListener("keydown",(e)=>{
 
-    if(e.key==="r" || e.key==="R"){
+    if(e.target && ["INPUT","TEXTAREA","SELECT"].includes(e.target.tagName)) return;
+
+    if(e.key === "r" || e.key === "R"){
 
         location.reload();
 
     }
 
-    if(e.key==="f" || e.key==="F"){
+    if(e.key === "f" || e.key === "F"){
 
         if(!document.fullscreenElement){
 
@@ -604,22 +301,12 @@ document.addEventListener("keydown",(e)=>{
         CONSOLE MESSAGE
 ===================================== */
 
-console.clear();
-
 console.log("%cSAFE5G AI Dashboard","font-size:28px;font-weight:bold;color:#3b82f6;");
 
-console.log("%cAI Monitoring Started Successfully.","font-size:15px;color:#22c55e;");
+console.log("%cLive monitoring active. All data sourced from the detection pipeline.","font-size:15px;color:#22c55e;");
 
 console.log("%cPress F for Fullscreen.","color:#f59e0b;");
 
 console.log("%cPress R to Refresh Dashboard.","color:#f59e0b;");
-
-/* =====================================
-        INITIALIZE
-===================================== */
-
-updateThreat();
-
-addIncident();
 
 console.log("SAFE5G Dashboard Ready.");

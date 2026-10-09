@@ -160,7 +160,7 @@ Settings
 
 <div>
 
-<h2>31</h2>
+<h2>{{ stats.total }}</h2>
 
 <p>Total Alerts</p>
 
@@ -178,7 +178,7 @@ Settings
 
 <div>
 
-<h2>8</h2>
+<h2>{{ stats.critical }}</h2>
 
 <p>Critical</p>
 
@@ -196,7 +196,7 @@ Settings
 
 <div>
 
-<h2>6</h2>
+<h2>{{ stats.pending }}</h2>
 
 <p>Pending</p>
 
@@ -214,7 +214,7 @@ Settings
 
 <div>
 
-<h2>17</h2>
+<h2>{{ stats.resolved }}</h2>
 
 <p>Resolved</p>
 
@@ -242,37 +242,25 @@ Export
 
 <div class="incident-list">
 
-<div class="incident danger">
+{% for a in alerts %}
+
+<div class="incident {% if a.alert_type == 'Violence' %}danger{% elif a.alert_type == 'HELP Gesture' %}warning{% else %}info{% endif %}">
 
 <div class="incident-dot"></div>
 
 <div>
 
-<h4>Violence Detected</h4>
+<h4>{{ a.alert_type }}</h4>
 
-<p>Camera 04 · Main Corridor</p>
-
-</div>
-
-<span>10:24 AM</span>
+<p>{{ a.camera }} &middot; {{ a.location }} &middot; {{ "%.0f"|format(a.confidence*100) if a.confidence <= 1 else a.confidence }}% conf</p>
 
 </div>
 
-<div class="incident warning">
-
-<div class="incident-dot"></div>
-
-<div>
-
-<h4>HELP Hand Gesture</h4>
-
-<p>Camera 02 · Parking Area</p>
+<span>{{ a.created_at }}</span>
 
 </div>
 
-<span>10:20 AM</span>
-
-</div>
+{% else %}
 
 <div class="incident info">
 
@@ -280,65 +268,19 @@ Export
 
 <div>
 
-<h4>Unknown Person</h4>
+<h4>No alerts yet</h4>
 
-<p>Camera 07 · Laboratory</p>
-
-</div>
-
-<span>10:16 AM</span>
+<p>Live monitoring active &middot; alerts appear here in real time</p>
 
 </div>
 
-<div class="incident success">
-
-<div class="incident-dot"></div>
-
-<div>
-
-<h4>Threat Cleared</h4>
-
-<p>Reception Camera</p>
+<span>--</span>
 
 </div>
 
-<span>10:08 AM</span>
+{% endfor %}
 
-</div>
-
-<div class="incident warning">
-
-<div class="incident-dot"></div>
-
-<div>
-
-<h4>Large Crowd Detected</h4>
-
-<p>Front Entrance</p>
-
-</div>
-
-<span>09:57 AM</span>
-
-</div>
-
-<div class="incident info">
-
-<div class="incident-dot"></div>
-
-<div>
-
-<h4>Restricted Area Entry</h4>
-
-<p>Server Room</p>
-
-</div>
-
-<span>09:51 AM</span>
-
-</div>
-
-</div>
+</div></div>
 
 </div>
 

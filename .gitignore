@@ -99,3 +99,12 @@ events.out.tfevents*
 *.bak
 *.swp
 *.swo
+# AI Models (ai/models)
+ai/models/*.pt
+ai/models/*.pth
+ai/models/*.task
+ai/models/*.onnx
+yolov8n.pt
+safe5g.db
+safe5g.db-*
+ppt_pages/

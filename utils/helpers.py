@@ -16,7 +16,8 @@ def timestamp():
 
 def filename(prefix="capture", extension="jpg"):
 
-    return f"{prefix}_{int(time.time())}.{extension}"
+    # Millisecond precision avoids same-second collisions
+    return f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.{extension}"
 
 
 def ensure_directory(path):
@@ -42,9 +43,14 @@ def save_image(frame, directory):
 
     )
 
-    cv2.imwrite(path, frame)
+    ok = cv2.imwrite(str(path), frame)
 
-    return path
+    if not ok:
+        print(f"[ERROR] failed to save image: {path}")
+
+        return None
+
+    return str(path)
 
 
 def resize(frame, width=1280):

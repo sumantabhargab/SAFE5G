@@ -1,34 +1,33 @@
+import os
+import base64
 import threading
+
 import requests
-from datetime import datetime
 
 from sensors.alert_manager import alert_manager
 
 
 class SOSTrigger:
+    """
+    Emergency escalation service.
+
+    Channels:
+    - webhook: real HTTP POST (with status check and one retry) when
+      SOS_WEBHOOK is configured via .env or configure().
+    - sms / email: adapters intended for Twilio / SMTP. They are stubs that
+      log clearly; they never pretend to have sent anything.
+    """
 
     def __init__(self):
+        self.phone_number = os.getenv("SOS_PHONE", "")
 
-        self.phone_number = ""
+        self.email = os.getenv("SOS_EMAIL", "")
 
-        self.email = ""
-
-        self.webhook = ""
+        self.webhook = os.getenv("SOS_WEBHOOK", "")
 
         self.enabled = True
 
-    def configure(
-
-        self,
-
-        phone="",
-
-        email="",
-
-        webhook=""
-
-    ):
-
+    def configure(self, phone="", email="", webhook=""):
         self.phone_number = phone
 
         self.email = email
@@ -36,203 +35,119 @@ class SOSTrigger:
         self.webhook = webhook
 
     def send_sms(self, message):
+        # Integrate Twilio/Fast2SMS here (needs credentials + number)
+        print(f"[SMS - NOT CONFIGURED] {message}")
 
-        print(
+    def send_email(self, subject, body):
+        # Integrate SMTP here (needs credentials + recipient)
+        print(f"[EMAIL - NOT CONFIGURED] {subject}")
 
-            f"[SMS] {message}"
-
-        )
-
-        # Integrate Twilio/Fast2SMS here
-
-    def send_email(
-
-        self,
-
-        subject,
-
-        body
-
-    ):
-
-        print(
-
-            f"[EMAIL] {subject}"
-
-        )
-
-        # Integrate SMTP here
-
-    def send_webhook(
-
-        self,
-
-        payload
-
-    ):
-
+    def send_webhook(self, payload):
         if not self.webhook:
+            print("[WEBHOOK - NOT CONFIGURED] set SOS_WEBHOOK to enable")
 
             return
 
-        try:
+        for attempt in (1, 2):
+            try:
+                response = requests.post(
+                    self.webhook,
+                    json=payload,
+                    timeout=5,
+                )
 
-            requests.post(
+                if response.status_code < 400:
+                    print(f"[WEBHOOK] delivered (status {response.status_code})")
 
-                self.webhook,
+                    return
 
-                json=payload,
+                print(f"[WEBHOOK] attempt {attempt} failed: HTTP {response.status_code}")
+            except Exception as e:
+                print(f"[WEBHOOK] attempt {attempt} error: {e}")
 
-                timeout=5
+    def _payload(self, alert, frame=None):
+        payload = dict(alert)
 
-            )
+        # Attach the snapshot inline so remote receivers can use it
+        if frame is not None:
+            try:
+                import cv2
 
-        except Exception as e:
+                ok, buf = cv2.imencode(".jpg", frame)
 
-            print(e)
+                if ok:
+                    payload["image_base64"] = base64.b64encode(buf).decode("ascii")
+            except Exception as e:
+                print(f"[WEBHOOK] snapshot encode failed: {e}")
 
-    def activate(
+        return payload
 
-        self,
-
-        alert,
-
-        frame=None
-
-    ):
-
+    def activate(self, alert, frame=None):
         if not self.enabled:
-
             return
 
         message = (
-
             f"Emergency Alert\n"
-
             f"Type : {alert['type']}\n"
-
             f"Camera : {alert['camera']}\n"
-
             f"Location : {alert['location']}\n"
-
             f"Time : {alert['time']}"
-
         )
 
-        threading.Thread(
+        payload = self._payload(alert, frame)
 
-            target=self.send_sms,
-
-            args=(message,),
-
-            daemon=True
-
-        ).start()
+        threading.Thread(target=self.send_sms, args=(message,), daemon=True).start()
 
         threading.Thread(
-
             target=self.send_email,
-
-            args=(
-
-                "Safe5G Emergency",
-
-                message
-
-            ),
-
-            daemon=True
-
+            args=("Safe5G Emergency", message),
+            daemon=True,
         ).start()
 
         threading.Thread(
-
             target=self.send_webhook,
-
-            args=(alert,),
-
-            daemon=True
-
+            args=(payload,),
+            daemon=True,
         ).start()
 
-    def help_detected(
-
-        self,
-
-        frame,
-
-        confidence,
-
-        camera,
-
-        location
-
-    ):
-
+    def help_detected(self, frame, confidence, camera, location, threat_level=None):
         alert = alert_manager.trigger(
-
             frame,
-
             "HELP Gesture",
-
             confidence,
-
             camera,
-
-            location
-
+            location,
+            threat_level=threat_level,
         )
 
-        self.activate(
+        if alert is None:
+            return None
 
-            alert,
+        self.activate(alert, frame)
 
-            frame
+        return alert
 
-        )
-
-    def violence_detected(
-
-        self,
-
-        frame,
-
-        confidence,
-
-        camera,
-
-        location
-
-    ):
-
+    def violence_detected(self, frame, confidence, camera, location, threat_level=None):
         alert = alert_manager.trigger(
-
             frame,
-
             "Violence",
-
             confidence,
-
             camera,
-
-            location
-
+            location,
+            threat_level=threat_level,
         )
 
-        self.activate(
+        if alert is None:
+            return None
 
-            alert,
+        self.activate(alert, frame)
 
-            frame
-
-        )
+        return alert
 
     def disable(self):
-
         self.enabled = False
 
     def enable(self):
-
         self.enabled = True
 
 

@@ -113,13 +113,13 @@ models/
 Gesture Model
 
 ```
-gesture.onnx
+hand_landmarker.task
 ```
 
 Violence Model
 
 ```
-violence.keras
+violence_classifier.pth
 ```
 
 ---

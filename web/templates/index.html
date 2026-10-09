@@ -188,7 +188,7 @@
 
                     <div>
 
-                        <h2 id="cameraCount">4</h2>
+                        <h2 id="cameraCount">{{ status.cameras }}</h2>
 
                         <p>Cameras Online</p>
 
@@ -206,7 +206,7 @@
 
                     <div>
 
-                        <h2 id="alertsToday">02</h2>
+                        <h2 id="alertsToday">{{ stats.total }}</h2>
 
                         <p>Today's Alerts</p>
 
@@ -224,7 +224,7 @@
 
                     <div>
 
-                        <h2 id="peopleDetected">11</h2>
+                        <h2 id="peopleDetected">{{ status.persons }}</h2>
 
                         <p>People Detected</p>
 
@@ -368,64 +368,25 @@
 
                         <div class="incident-list">
 
-                            <div class="incident danger">
+                            {% for a in recent_alerts %}
+
+                            <div class="incident {% if a.alert_type == 'Violence' %}danger{% elif a.alert_type == 'HELP Gesture' %}warning{% else %}info{% endif %}">
 
                                 <div class="incident-dot"></div>
 
                                 <div>
 
-                                    <h4>Violence Detected</h4>
+                                    <h4>{{ a.alert_type }}</h4>
 
-                                    <p>Living Room</p>
-
-                                </div>
-
-                                <span>
-
-                                    21:04
-
-                                </span>
-
-                            </div>
-
-                            <div class="incident warning">
-
-                                <div class="incident-dot"></div>
-
-                                <div>
-
-                                    <h4>HELP Gesture</h4>
-
-                                    <p>Front Door</p>
+                                    <p>{{ a.camera }} &middot; {{ a.location }}</p>
 
                                 </div>
 
-                                <span>
-
-                                    18:14
-
-                                </span>
+                                <span>{{ a.created_at.split(' ')[-1] if a.created_at else '--' }}</span>
 
                             </div>
-                                                        <div class="incident success">
 
-                                <div class="incident-dot"></div>
-
-                                <div>
-
-                                    <h4>System Check Complete</h4>
-
-                                    <p>All Cameras Healthy</p>
-
-                                </div>
-
-                                <span>
-
-                                    15:42
-
-                                </span>
-
-                            </div>
+                            {% else %}
 
                             <div class="incident info">
 
@@ -433,21 +394,19 @@
 
                                 <div>
 
-                                    <h4>Camera Connected</h4>
+                                    <h4>No incidents yet</h4>
 
-                                    <p>Parking Area</p>
+                                    <p>Live monitoring active</p>
 
                                 </div>
 
-                                <span>
-
-                                    14:08
-
-                                </span>
+                                <span>--</span>
 
                             </div>
 
-                        </div>
+                            {% endfor %}
+
+                        </div></div>
 
                     </div>
 
@@ -473,11 +432,7 @@
 
                                 <div class="circle">
 
-                                    <h1 id="threatValue">
-
-                                        28%
-
-                                    </h1>
+                                    <h1 id="threatValue">{{ status.threat_score }}%</h1>
 
                                     <span>LOW</span>
 

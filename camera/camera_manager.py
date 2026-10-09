@@ -1,43 +1,51 @@
+import threading
+
 import cv2
+
+from utils.config import FRAME_WIDTH, FRAME_HEIGHT
 
 
 class CameraManager:
 
     def __init__(self):
-
         self.cameras = {}
 
+        self._lock = threading.Lock()
+
         # Latest processed frame from the AI pipeline
-        self.latest_frame = None
+        self._latest_frame = None
+
+        self._frame_version = 0
 
     #########################################################
     # CAMERA
     #########################################################
 
     def get_camera(self, index=0):
+        with self._lock:
+            if index not in self.cameras:
+                cap = cv2.VideoCapture(index)
 
-        if index not in self.cameras:
+                if not cap.isOpened():
+                    return None
 
-            cap = cv2.VideoCapture(index)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
 
-            if not cap.isOpened():
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 
-                raise RuntimeError(f"Cannot open camera {index}")
+                self.cameras[index] = cap
 
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-            self.cameras[index] = cap
-
-        return self.cameras[index]
+            return self.cameras[index]
 
     #########################################################
     # RAW FRAME
     #########################################################
 
     def read_frame(self, index=0):
-
         cap = self.get_camera(index)
+
+        if cap is None:
+            return None
 
         success, frame = cap.read()
 
@@ -51,19 +59,25 @@ class CameraManager:
     #########################################################
 
     def update_frame(self, frame):
+        with self._lock:
+            self._latest_frame = frame
 
-        self.latest_frame = frame.copy()
+            self._frame_version += 1
 
     #########################################################
     # JPEG FOR WEBSITE
     #########################################################
 
     def get_jpeg(self):
+        with self._lock:
+            frame = self._latest_frame
 
-        if self.latest_frame is None:
-            return None
+            if frame is None:
+                return None
 
-        success, buffer = cv2.imencode(".jpg", self.latest_frame)
+            frame = frame.copy()  # copy under lock, encode outside
+
+        success, buffer = cv2.imencode(".jpg", frame)
 
         if not success:
             return None
@@ -75,19 +89,31 @@ class CameraManager:
     #########################################################
 
     def generate_frames(self):
+        last_version = -1
 
         while True:
+            with self._lock:
+                frame = self._latest_frame
 
-            jpg = self.get_jpeg()
+                version = self._frame_version
 
-            if jpg is None:
+            if frame is None or version == last_version:
+                import time
+
+                time.sleep(0.05)
+
+                continue
+
+            last_version = version
+
+            success, buffer = cv2.imencode(".jpg", frame.copy())
+
+            if not success:
                 continue
 
             yield (
-                b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' +
-                jpg +
-                b'\r\n'
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
             )
 
     #########################################################
@@ -95,12 +121,11 @@ class CameraManager:
     #########################################################
 
     def release(self):
+        with self._lock:
+            for cap in self.cameras.values():
+                cap.release()
 
-        for cap in self.cameras.values():
-
-            cap.release()
-
-        self.cameras.clear()
+            self.cameras.clear()
 
 
 camera_manager = CameraManager()
