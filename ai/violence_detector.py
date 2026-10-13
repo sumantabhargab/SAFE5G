@@ -71,6 +71,8 @@ class ViolenceDetector:
 
         self.model.eval()
 
+        self.ready = True
+
         # ImageNet normalization, matching training transforms
         self.mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
 

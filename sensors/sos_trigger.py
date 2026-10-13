@@ -5,6 +5,7 @@ import threading
 import requests
 
 from sensors.alert_manager import alert_manager
+from utils.logger import logger
 
 
 class SOSTrigger:
@@ -36,16 +37,15 @@ class SOSTrigger:
 
     def send_sms(self, message):
         # Integrate Twilio/Fast2SMS here (needs credentials + number)
-        print(f"[SMS - NOT CONFIGURED] {message}")
+        logger.info(f"[SMS - NOT CONFIGURED] {message}")
 
     def send_email(self, subject, body):
         # Integrate SMTP here (needs credentials + recipient)
-        print(f"[EMAIL - NOT CONFIGURED] {subject}")
+        logger.info(f"[EMAIL - NOT CONFIGURED] {subject}")
 
     def send_webhook(self, payload):
         if not self.webhook:
-            print("[WEBHOOK - NOT CONFIGURED] set SOS_WEBHOOK to enable")
-
+            logger.warning("WEBHOOK - NOT CONFIGURED, set SOS_WEBHOOK to enable")
             return
 
         for attempt in (1, 2):
@@ -57,13 +57,12 @@ class SOSTrigger:
                 )
 
                 if response.status_code < 400:
-                    print(f"[WEBHOOK] delivered (status {response.status_code})")
-
+                    logger.info(f"WEBHOOK delivered (status {response.status_code})")
                     return
 
-                print(f"[WEBHOOK] attempt {attempt} failed: HTTP {response.status_code}")
+                logger.warning(f"WEBHOOK attempt {attempt} failed: HTTP {response.status_code}")
             except Exception as e:
-                print(f"[WEBHOOK] attempt {attempt} error: {e}")
+                logger.error(f"WEBHOOK attempt {attempt} error: {e}")
 
     def _payload(self, alert, frame=None):
         payload = dict(alert)
@@ -78,7 +77,7 @@ class SOSTrigger:
                 if ok:
                     payload["image_base64"] = base64.b64encode(buf).decode("ascii")
             except Exception as e:
-                print(f"[WEBHOOK] snapshot encode failed: {e}")
+                logger.error(f"WEBHOOK snapshot encode failed: {e}")
 
         return payload
 

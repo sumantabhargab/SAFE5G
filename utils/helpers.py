@@ -46,8 +46,8 @@ def save_image(frame, directory):
     ok = cv2.imwrite(str(path), frame)
 
     if not ok:
-        print(f"[ERROR] failed to save image: {path}")
-
+        from utils.logger import logger
+        logger.error(f"failed to save image: {path}")
         return None
 
     return str(path)
@@ -203,38 +203,26 @@ def overlay(frame):
 
 def success(message):
 
-    print(
-
-        f"[SUCCESS] {message}"
-
-    )
+    from utils.logger import logger
+    logger.info(message)
 
 
 def warning(message):
 
-    print(
-
-        f"[WARNING] {message}"
-
-    )
+    from utils.logger import logger
+    logger.warning(message)
 
 
 def error(message):
 
-    print(
-
-        f"[ERROR] {message}"
-
-    )
+    from utils.logger import logger
+    logger.error(message)
 
 
 def info(message):
 
-    print(
-
-        f"[INFO] {message}"
-
-    )
+    from utils.logger import logger
+    logger.info(message)
 
 
 def draw_banner(

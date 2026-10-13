@@ -23,14 +23,10 @@ def _load_weights():
     try:
         data = json.loads(WEIGHTS_FILE.read_text())
 
-        if isinstance(data.get("alert_cooldown"), (int, float)):
-            defaults["cooldown_seconds"] = data["alert_cooldown"]
-
+        # alert_cooldown is now managed by AlertManager, not here
+        # panic_button directly maps to sos_gesture score
         if isinstance(data.get("panic_button"), (int, float)):
             defaults["sos_gesture"] = data["panic_button"]
-
-        if isinstance(data.get("running"), (int, float)):
-            defaults["violence"] = max(defaults["violence"], data["running"])
     except Exception:
         pass
 
@@ -73,10 +69,6 @@ class RuleEngine:
 
         # Threat smoothing
         self.previous_score = 0
-
-        # Alert cooldown
-        self.cooldown = self.weights["cooldown_seconds"]
-        self.last_alert = 0
 
     def evaluate(
         self,
@@ -200,16 +192,9 @@ class RuleEngine:
         # Trigger Logic
         ###############################################
 
-        trigger = False
-
-        now = time.time()
-
-        if (
-            score >= self.weights["trigger_score"]
-            and (now - self.last_alert) > self.cooldown
-        ):
-            trigger = True
-            self.last_alert = now
+        # Trigger on score threshold only. Actual alert dispatch is
+        # gated by AlertManager's cooldown (config.ALERT_COOLDOWN).
+        trigger = score >= self.weights["trigger_score"]
 
         return {
             "trigger": trigger,
@@ -228,7 +213,6 @@ class RuleEngine:
         self.person_frames = 0
         self.vehicle_frames = 0
         self.previous_score = 0
-        self.last_alert = 0
 
 
 rule_engine = RuleEngine()

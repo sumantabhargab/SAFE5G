@@ -43,6 +43,7 @@ class Database:
                     camera TEXT,
                     location TEXT,
                     image TEXT,
+                    threat_level TEXT,
                     status TEXT,
                     created_at TEXT
                 );
@@ -66,6 +67,7 @@ class Database:
         camera,
         location,
         image="",
+        threat_level=None,
         status="Pending",
     ):
         with self._lock:
@@ -77,10 +79,11 @@ class Database:
                     camera,
                     location,
                     image,
+                    threat_level,
                     status,
                     created_at
                 )
-                VALUES(?,?,?,?,?,?,?)
+                VALUES(?,?,?,?,?,?,?,?)
                 """,
                 (
                     alert_type,
@@ -88,6 +91,7 @@ class Database:
                     camera,
                     location,
                     image,
+                    threat_level,
                     status,
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 ),

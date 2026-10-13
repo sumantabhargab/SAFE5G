@@ -45,6 +45,7 @@ class GestureDetector:
         model_path = MODEL_DIR / "hand_landmarker.task"
 
         if not model_path.exists():
+            self.ready = False
             raise FileNotFoundError(
                 f"Hand landmarker model not found: {model_path}\n"
                 "Download: https://storage.googleapis.com/mediapipe-models/"
@@ -62,9 +63,91 @@ class GestureDetector:
 
         self.landmarker = vision.HandLandmarker.create_from_options(options)
 
+        self.ready = True
+
         self._timestamp_ms = 0
 
         self.confirm_frames = 0
+
+    def make_clone(self):
+        """Create an independent detector for use by the upload analysis thread.
+        Uses IMAGE mode (no timestamps) so it does not conflict with the
+        live camera loop's VIDEO-mode landmarker."""
+        model_path = MODEL_DIR / "hand_landmarker.task"
+        options = vision.HandLandmarkerOptions(
+            base_options=mp.tasks.BaseOptions(model_asset_path=str(model_path)),
+            running_mode=vision.RunningMode.IMAGE,
+            num_hands=2,
+            min_hand_detection_confidence=0.6,
+            min_hand_presence_confidence=0.5,
+            min_tracking_confidence=0.5,
+        )
+        clone = GestureDetector.__new__(GestureDetector)
+        clone.ready = True
+        clone.landmarker = vision.HandLandmarker.create_from_options(options)
+        clone._timestamp_ms = 0
+        clone.confirm_frames = 0
+        clone.FINGER_JOINTS = self.FINGER_JOINTS
+        clone.HAND_CONNECTIONS = self.HAND_CONNECTIONS
+        clone._draw_hand = self._draw_hand
+        clone._open_palm = self._open_palm
+        return clone
+
+    def detect_image(self, frame):
+        """Gesture detection in IMAGE mode (no timestamp) — for upload analysis."""
+        annotated = frame.copy()
+
+        mp_image = mp.Image(
+            image_format=mp.ImageFormat.SRGB,
+            data=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
+        )
+
+        results = self.landmarker.detect(mp_image)
+
+        palm_this_frame = False
+
+        landmark_points = []
+
+        if results.hand_landmarks:
+            for hand_landmarks, hand_info in zip(
+                results.hand_landmarks,
+                results.handedness,
+            ):
+                label = hand_info[0].category_name
+
+                self._draw_hand(annotated, hand_landmarks)
+
+                if self._open_palm(hand_landmarks, label):
+                    palm_this_frame = True
+
+                for p in hand_landmarks:
+                    landmark_points.append((p.x, p.y))
+
+        if palm_this_frame:
+            self.confirm_frames += 1
+        else:
+            self.confirm_frames = 0
+
+        help_detected = self.confirm_frames >= GESTURE_CONFIRM_FRAMES
+
+        if help_detected:
+            cv2.putText(
+                annotated,
+                "HELP GESTURE DETECTED",
+                (20, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.9,
+                (0, 0, 255),
+                3,
+            )
+
+        return {
+            "help": help_detected,
+            "frames": self.confirm_frames,
+            "hands": len(results.hand_landmarks) if results.hand_landmarks else 0,
+            "landmarks": landmark_points,
+            "frame": annotated,
+        }
 
     def _open_palm(self, lm, handedness_label):
         """
@@ -180,6 +263,24 @@ class GestureDetector:
 
     def reset(self):
         self.confirm_frames = 0
+        self._timestamp_ms = 0
+
+    def make_clone(self):
+        """Create an independent detector with its own timestamp — for use by the
+        upload analysis thread so it does not race with the live camera loop."""
+        import mediapipe as mp
+        from mediapipe.tasks.python import vision
+        from utils.config import GESTURE_CONFIRM_FRAMES
+
+        clone = GestureDetector.__new__(GestureDetector)
+        clone.ready = True
+        clone.landmarker = self.landmarker  # share the model instance
+        clone._timestamp_ms = 0
+        clone.confirm_frames = 0
+        clone.confirm_frames = GESTURE_CONFIRM_FRAMES
+        clone.FINGER_JOINTS = self.FINGER_JOINTS
+        clone.HAND_CONNECTIONS = self.HAND_CONNECTIONS
+        return clone
 
 
 gesture_detector = GestureDetector()

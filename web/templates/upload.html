@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Analysis - Safe5G</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/8c0d0d5a5d.js" crossorigin="anonymous"></script>
+    <style>
+        .upload-zone {
+            border: 2px dashed #3b82f6;
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            background: rgba(59, 130, 246, 0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #60a5fa;
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.01);
+        }
+
+        .upload-zone i {
+            font-size: 48px;
+            color: #3b82f6;
+            margin-bottom: 16px;
+        }
+
+        .upload-zone p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .upload-zone h3 {
+            color: #e2e8f0;
+            margin: 0 0 8px 0;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .analysis-results {
+            display: none;
+        }
+
+        .analysis-results.visible {
+            display: block;
+        }
+
+        .timeline-container {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .video-wrapper {
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+            max-height: 500px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .video-wrapper video {
+            max-width: 100%;
+            max-height: 500px;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .event-item.violence {
+            border-left-color: #ef4444;
+        }
+
+        .event-item.help_gesture {
+            border-left-color: #f59e0b;
+        }
+
+        .event-type {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .event-time {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .event-confidence {
+            margin-left: auto;
+            background: rgba(59, 130, 246, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .event-item.violence .event-confidence {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .event-item.help_gesture .event-confidence {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .event-item .clickable-time {
+            color: #3b82f6;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .event-item.violence .clickable-time {
+            color: #f87171;
+        }
+
+        .event-item.help_gesture .clickable-time {
+            color: #fbbf24;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-stat {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-stat .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .summary-stat .label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .processing-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .processing-overlay.visible {
+            display: flex;
+        }
+
+        .processing-box {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #3b82f6;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .no-events i {
+            font-size: 32px;
+            color: #22c55e;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-glow glow1"></div>
+    <div class="background-glow glow2"></div>
+
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div>
+                    <h2>Safe5G</h2>
+                    <span>AI SECURITY</span>
+                </div>
+            </div>
+
+            <nav>
+                <ul>
+                    <li>
+                        <a href="/">
+                            <i class="fas fa-chart-line"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/cameras">
+                            <i class="fas fa-video"></i>
+                            Cameras
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/alerts">
+                            <i class="fas fa-triangle-exclamation"></i>
+                            Alerts
+                        </a>
+                    </li>
+                    <li class="active">
+                        <a href="#">
+                            <i class="fas fa-film"></i>
+                            Video Analysis
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="system-card">
+                    <span class="dot"></span>
+                    <div>
+                        <h4>AI Ready</h4>
+                        <p>Upload & Analyze</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header>
+                <div>
+                    <h1>Video Analysis</h1>
+                    <p>Upload a video file for AI-powered violence and gesture detection</p>
+                </div>
+            </header>
+
+            <!-- Upload Zone -->
+            <section class="main-grid">
+                <div class="left-column">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Upload Video</h2>
+                        </div>
+                        <div class="upload-zone" id="uploadZone">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <h3>Drop your video here or click to browse</h3>
+                            <p>Supported formats: MP4, AVI, MOV, MKV, FLV, WMV</p>
+                            <input type="file" id="fileInput" accept=".mp4,.avi,.mov,.mkv,.flv,.wmv">
+                        </div>
+                    </div>
+
+                    <!-- Processing Progress -->
+                    <div class="panel" id="processingPanel" style="display:none;">
+                        <div class="panel-header">
+                            <h2>Processing</h2>
+                        </div>
+                        <div style="text-align:center; padding:20px;">
+                            <div class="spinner"></div>
+                            <p style="color:#94a3b8;">Analyzing video with YOLO + Violence Classifier...</p>
+                            <div class="progress-bar" style="margin-top:20px;">
+                                <div class="fill" id="progressFill" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="analysis-results" id="resultsPanel">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h2>Analysis Results</h2>
+                            </div>
+
+                            <div class="video-wrapper">
+                                <video id="analyzedVideo" controls>
+                                    <source src="" type="video/mp4">
+                                </video>
+                            </div>
+
+                            <div class="summary-grid" id="summaryGrid"></div>
+
+                            <div class="timeline-container">
+                                <h3 style="margin:0 0 16px 0;">
+                                    <i class="fas fa-timeline" style="color:#3b82f6;"></i>
+                                    Event Timeline
+                                </h3>
+                                <div id="timelineEvents"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Info -->
+                <div class="right-column">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>How It Works</h2>
+                        </div>
+                        <div style="color:#94a3b8; line-height:1.8;">
+                            <p><strong style="color:#e2e8f0;">1. Upload</strong> — Select a video file</p>
+                            <p><strong style="color:#e2e8f0;">2. YOLO Detection</strong> — Person & vehicle detection per frame</p>
+                            <p><strong style="color:#e2e8f0;">3. Violence Classifier</strong> — EfficientNet-B0 frame-level classification with temporal voting</p>
+                            <p><strong style="color:#e2e8f0;">4. Gesture Detection</strong> — MediaPipe open-palm (HELP) gesture recognition</p>
+                            <p><strong style="color:#e2e8f0;">5. Timeline</strong> — Coalesced events with timestamps and confidence scores</p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Detection Models</h2>
+                        </div>
+                        <div style="color:#94a3b8; line-height:1.8;">
+                            <p><strong style="color:#e2e8f0;">YOLOv8n</strong> — Object detection</p>
+                            <p><strong style="color:#e2e8f0;">EfficientNet-B0</strong> — Violence classification (F1: 0.953)</p>
+                            <p><strong style="color:#e2e8f0;">MediaPipe</strong> — Hand landmark + gesture recognition</p>
+                            <p><strong style="color:#e2e8f0;">Sliding Window</strong> — 16-frame violence temporal voting</p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Output</h2>
+                        </div>
+                        <div style="color:#94a3b8; line-height:1.8;">
+                            <p><strong style="color:#e2e8f0;">Annotated Video</strong> — Frame-by-frame detection overlays</p>
+                            <p><strong style="color:#e2e8f0;">Event Timeline</strong> — Coalesced violence/gesture events</p>
+                            <p><strong style="color:#e2e8f0;">Summary Stats</strong> — Duration, FPS, person counts, max scores</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById("uploadZone");
+        const fileInput = document.getElementById("fileInput");
+        const processingPanel = document.getElementById("processingPanel");
+        const progressFill = document.getElementById("progressFill");
+        const resultsPanel = document.getElementById("resultsPanel");
+        const analyzedVideo = document.getElementById("analyzedVideo");
+        const summaryGrid = document.getElementById("summaryGrid");
+        const timelineEvents = document.getElementById("timelineEvents");
+
+        // Drag & drop
+        uploadZone.addEventListener("click", () => fileInput.click());
+
+        uploadZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            uploadZone.classList.add("dragover");
+        });
+
+        uploadZone.addEventListener("dragleave", () => {
+            uploadZone.classList.remove("dragover");
+        });
+
+        uploadZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove("dragover");
+            const file = e.dataTransfer.files[0];
+            if (file) handleUpload(file);
+        });
+
+        fileInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) handleUpload(file);
+        });
+
+        async function handleUpload(file) {
+            const formData = new FormData();
+            formData.append("video", file);
+
+            uploadZone.style.display = "none";
+            processingPanel.style.display = "block";
+            resultsPanel.classList.remove("visible");
+            progressFill.style.width = "10%";
+
+            try {
+                // Upload the video
+                const uploadRes = await fetch("/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!uploadRes.ok) {
+                    const err = await uploadRes.json();
+                    throw new Error(err.error || "Upload failed");
+                }
+
+                const uploadData = await uploadRes.json();
+                progressFill.style.width = "20%";
+
+                // Poll for analysis completion
+                await pollAnalysis(uploadData.video_id);
+
+            } catch (err) {
+                alert("Error: " + err.message);
+                uploadZone.style.display = "block";
+                processingPanel.style.display = "none";
+                console.error(err);
+            }
+        }
+
+        async function pollAnalysis(videoId) {
+            const maxAttempts = 600; // 5 minutes max
+            let attempt = 0;
+
+            const interval = setInterval(async () => {
+                attempt++;
+                progressFill.style.width = Math.min(20 + (attempt / maxAttempts) * 75, 95) + "%";
+
+                try {
+                    const res = await fetch(`/api/video/status/${videoId}`);
+                    const data = await res.json();
+
+                    if (data.status === "done") {
+                        clearInterval(interval);
+                        progressFill.style.width = "100%";
+                        setTimeout(() => {
+                            processingPanel.style.display = "none";
+                            displayResults(data);
+                        }, 500);
+                    } else if (data.status === "error") {
+                        clearInterval(interval);
+                        alert("Analysis failed: " + data.error);
+                        uploadZone.style.display = "block";
+                        processingPanel.style.display = "none";
+                    }
+                } catch (e) {
+                    console.warn("Poll error:", e);
+                }
+            }, 1000);
+        }
+
+        function displayResults(data) {
+            const { summary, results, video_path } = data;
+
+            // Set video source
+            analyzedVideo.src = video_path;
+
+            // Summary stats
+            summaryGrid.innerHTML = `
+                <div class="summary-stat">
+                    <div class="value">${summary.video_duration}s</div>
+                    <div class="label">Duration</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="value">${summary.total_frames}</div>
+                    <div class="label">Frames</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="value">${summary.fps}</div>
+                    <div class="label">FPS</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="value">${summary.avg_person_count}</div>
+                    <div class="label">Avg Persons</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="value" style="color:#ef4444;">${summary.violence}</div>
+                    <div class="label">Violent Frames</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="value" style="color:#f59e0b;">${summary.help_gesture}</div>
+                    <div class="label">HELP Frames</div>
+                </div>
+            `;
+
+            // Timeline events
+            if (results.length === 0) {
+                timelineEvents.innerHTML = `
+                    <div class="no-events">
+                        <i class="fas fa-circle-check"></i>
+                        <p>No violence or gesture events detected in this video.</p>
+                    </div>`;
+            } else {
+                timelineEvents.innerHTML = results.map((event, i) => `
+                    <div class="event-item ${event.type}">
+                        <i class="fas ${event.type === 'violence' ? 'fa-shield-halved' : 'fa-hand'}"></i>
+                        <span class="event-type">${event.type.replace('_', ' ')}</span>
+                        <span class="event-time">
+                            <span class="clickable-time" onclick="seekVideo(${event.start})">${formatTime(event.start)} – ${formatTime(event.end)}</span>
+                            (${event.duration}s)
+                        </span>
+                        <span class="event-confidence">${event.confidence}</span>
+                    </div>
+                `).join("");
+            }
+
+            resultsPanel.classList.add("visible");
+        }
+
+        function seekVideo(time) {
+            analyzedVideo.currentTime = time;
+            analyzedVideo.play();
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, "0")}`;
+        }
+    </script>
+</body>
+
+</html>

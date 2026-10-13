@@ -5,6 +5,7 @@ from datetime import datetime
 from database.database import db
 from utils.helpers import save_image
 from utils.config import IMAGE_PATH, ALERT_COOLDOWN
+from utils.logger import logger
 
 
 class AlertManager:
@@ -36,7 +37,7 @@ class AlertManager:
             try:
                 callback(data)
             except Exception as e:
-                print(f"[ALERT LISTENER ERROR] {e}")
+                logger.error(f"ALERT LISTENER ERROR: {e}")
 
     def _should_fire(self, alert_type):
         now = time.monotonic()
@@ -57,7 +58,7 @@ class AlertManager:
 
             winsound.Beep(1500, 800)
         except Exception:
-            print("[ALARM] beep unavailable on this platform")
+            logger.warning("ALARM beep unavailable on this platform")
 
     def trigger(
         self,
@@ -79,12 +80,13 @@ class AlertManager:
         image_path = save_image(frame, IMAGE_PATH)
 
         alert_id = db.add_alert(
-            alert_type,
-            confidence,
-            camera,
-            location,
-            image_path,
-            "Pending",
+            alert_type=alert_type,
+            confidence=confidence,
+            camera=camera,
+            location=location,
+            image=image_path,
+            threat_level=threat_level,
+            status="Pending",
         )
 
         with self._lock:

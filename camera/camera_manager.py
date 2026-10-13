@@ -24,14 +24,26 @@ class CameraManager:
     def get_camera(self, index=0):
         with self._lock:
             if index not in self.cameras:
-                cap = cv2.VideoCapture(index)
+                cap = None
 
-                if not cap.isOpened():
+                # OBS Virtual Camera on Windows: try backends in order
+                # CAP_ANY avoids DSHOW blocking issues with OBS source-mode
+                for backend in [cv2.CAP_DSHOW, cv2.CAP_ANY, cv2.CAP_MSMF]:
+                    cap = cv2.VideoCapture(index, backend)
+                    if cap.isOpened():
+                        break
+                    cap = None
+
+                if not cap or not cap.isOpened():
                     return None
 
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
 
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+
+                # Skip stale frames on startup
+                for _ in range(10):
+                    ret, frame = cap.read()
 
                 self.cameras[index] = cap
 

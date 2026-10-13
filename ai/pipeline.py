@@ -30,11 +30,15 @@ class AIPipeline:
 
         self.frames_since_alert = 0
 
+        self.last_trigger_time = 0  # time.monotonic() of last trigger
+
+        self.stop_recording_delay = 15  # seconds after threat subsides
+
         self.last_trigger = None  # dict describing the last fired alert
 
         self.last_threat = {"score": 0, "level": "SAFE", "reasons": []}
 
-        self.last_violence = None
+        self.last_track_ids = []  # stable person track IDs
 
     def process(self, frame, camera="Camera 01", location="Unknown"):
         #############################################
@@ -77,12 +81,9 @@ class AIPipeline:
 
         self.frame_counter += 1
 
-        if self.frame_counter % 2 == 0 or self.last_violence is None:
-            violence = violence_detector.detect(output)
-
-            self.last_violence = violence
-        else:
-            violence = self.last_violence
+        # Classify every frame to keep the sliding window at the correct
+        # time scale (16 frames at 30fps ≈ 0.53s wall-clock).
+        violence = violence_detector.detect(output)
 
         output = violence["frame"]
 
@@ -108,6 +109,8 @@ class AIPipeline:
         self.last_person_count = person_count
 
         self.last_fps = yolo["fps"]
+
+        self.last_track_ids = yolo.get("track_ids", [])
 
         #############################################
         # Alert Dispatch (cooldown-gated by rule engine + alert manager)
@@ -173,14 +176,18 @@ class AIPipeline:
 
             self.recording = True
 
+            self.last_trigger_time = time.monotonic()
+
         if self.recording:
             media_manager.write(output)
 
-            # Stop recording after the threat has subsided for a while
-            if verdict["score"] < 30 and self.frames_since_alert > 5 * 30:
-                media_manager.stop_recording()
+            # Stop recording after threat subsides for stop_recording_delay seconds
+            if time.monotonic() - self.last_trigger_time > self.stop_recording_delay:
+                if verdict["score"] < 30:
+                    media_manager.stop_recording()
 
-                self.recording = False
+                    self.recording = False
+                    self.last_trigger_time = 0
 
         #############################################
         # Dashboard Overlay + HUD

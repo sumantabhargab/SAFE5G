@@ -1,4 +1,8 @@
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,16 +18,16 @@ YOLO_MODEL = MODEL_DIR / "yolov8n.pt"
 
 VIOLENCE_MODEL = MODEL_DIR / "violence_classifier.pth"
 
-GESTURE_MODEL = MODEL_DIR / "gesture.onnx"
+HEADLESS = os.getenv("SAFE5G_HEADLESS", "0").lower() == "1"
 
 
-CAMERA_INDEX = 0
+CAMERA_INDEX = 2
 
-FRAME_WIDTH = 1280
+FRAME_WIDTH = 640
 
-FRAME_HEIGHT = 720
+FRAME_HEIGHT = 480
 
-FPS = 30
+FPS = 15
 
 
 YOLO_CONFIDENCE = 0.40
@@ -44,6 +48,12 @@ GESTURE_CONFIRM_FRAMES = 5
 
 # Alert cooldown per type per camera (seconds)
 ALERT_COOLDOWN = 60
+
+# ReID tracking — stable person IDs across frames
+TRACKER_ENABLED = True
+TRACKER_MAX_AGE = 30
+TRACKER_N_INIT = 3
+TRACKER_MAX_COSINE_DIST = 0.5
 
 
 SAVE_IMAGES = True
@@ -151,3 +161,8 @@ SYSTEM_NAME = "Safe5G"
 VERSION = "1.1"
 
 AUTHOR = "Sumanta Bhargab"
+
+# SOS escalation — loaded from .env via load_dotenv()
+SOS_WEBHOOK = os.getenv("SOS_WEBHOOK", "")
+SOS_PHONE = os.getenv("SOS_PHONE", "")
+SOS_EMAIL = os.getenv("SOS_EMAIL", "")
